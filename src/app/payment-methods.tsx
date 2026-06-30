@@ -14,7 +14,7 @@ export default function PaymentMethods() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [selected, setSelected] = useState('Cash');
+  const [selected, setSelected] = useState('');
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
@@ -26,23 +26,7 @@ export default function PaymentMethods() {
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 130 }}
         showsVerticalScrollIndicator={false}>
-        <Text style={styles.section}>Cash</Text>
-        <Method
-          label="Cash"
-          icon={<Ionicons name="cash" size={22} color={colors.primary} />}
-          selected={selected === 'Cash'}
-          onPress={() => setSelected('Cash')}
-        />
-
-        <Text style={styles.section}>Wallet</Text>
-        <Method
-          label="Wallet"
-          icon={<Ionicons name="wallet" size={22} color={colors.primary} />}
-          selected={selected === 'Wallet'}
-          onPress={() => setSelected('Wallet')}
-        />
-
-        <Text style={styles.section}>Credit & Debit Card</Text>
+        <Text style={[styles.section, { marginTop: 8 }]}>Credit & Debit Card</Text>
         <Pressable style={styles.method} onPress={() => router.push('/add-card')}>
           <View style={styles.methodLeft}>
             <Ionicons name="card" size={22} color={colors.primary} />
