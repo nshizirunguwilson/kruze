@@ -39,7 +39,7 @@ export default function Home() {
             <Ionicons name="search" size={20} color={colors.textSecondary} />
             <Text style={styles.searchText}>Search</Text>
           </Pressable>
-          <Pressable style={styles.filterBtn} onPress={() => router.push('/explore')}>
+          <Pressable style={styles.filterBtn} onPress={() => router.push('/filter')}>
             <Ionicons name="options-outline" size={22} color={colors.primary} />
           </Pressable>
         </View>
