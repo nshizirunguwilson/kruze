@@ -1,6 +1,6 @@
 /**
  * Central color tokens, measured/eyeballed from the design samples.
- * Tune here once — every screen reads from these.
+ * Tune here once, every screen reads from these.
  */
 export const colors = {
   // Brand

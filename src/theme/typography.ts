@@ -1,6 +1,6 @@
 /**
  * Inter font family names, as registered by @expo-google-fonts/inter.
- * Always set fontFamily explicitly — React Native won't synthesize weights
+ * Always set fontFamily explicitly. React Native won't synthesize weights
  * for custom fonts.
  */
 export const fontFamily = {

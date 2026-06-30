@@ -83,7 +83,7 @@ export default function Welcome() {
           {'\n'}Experience
         </Text>
         <Text style={styles.subtitle}>
-          Rent the right car for every trip — from quick city errands to long weekend getaways. Book
+          Rent the right car for every trip, from quick city errands to long weekend getaways. Book
           in minutes and hit the road.
         </Text>
 

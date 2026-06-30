@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, fontFamily } from '@/theme';
 
-// Placeholder — built fully in Batch 2 (auth flow).
+// Placeholder, built fully in Batch 2 (auth flow).
 export default function SignUpPlaceholder() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
