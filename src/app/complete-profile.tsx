@@ -90,7 +90,7 @@ export default function CompleteProfile() {
             title="Complete Profile"
             pill
             style={styles.cta}
-            onPress={() => router.replace('/welcome')}
+            onPress={() => router.replace('/location')}
           />
         </ScrollView>
       </KeyboardAvoidingView>

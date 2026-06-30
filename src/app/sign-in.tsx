@@ -62,7 +62,7 @@ export default function SignIn() {
             />
           </View>
 
-          <PrimaryButton title="Sign In" pill onPress={() => router.push('/verify')} />
+          <PrimaryButton title="Sign In" pill onPress={() => router.replace('/home')} />
 
           <View style={styles.social}>
             <SocialRow label="Or sign in with" />
