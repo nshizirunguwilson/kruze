@@ -11,13 +11,16 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { RangeSlider } from '@/components/ui/RangeSlider';
 import { colors, fontFamily } from '@/theme';
 
-const TYPES = ['All', 'Sedan', 'SUV', 'Hatchback'];
+const TYPES = ['All', 'Sedan', 'SUV', 'Pickup'];
 const TRANSMISSIONS = ['All', 'Manual', 'Automatic', 'CVT'];
-const BRANDS = ['All', 'Honda', 'BMW', 'Hyundai'];
-const SCALE = ['$50', '$100', '$150', '$200', '$300', '$400'];
+const BRANDS = ['All', 'Toyota'];
+const SCALE = ['$10', '$20', '$30', '$40', '$50', '$60'];
 const REVIEWS = ['4.5 and above', '4.0 - 4.5', '3.5 - 4.0', '3.0 - 3.5', '2.5 - 3.0'];
+const REVIEW_MIN = [4.5, 4.0, 3.5, 3.0, 2.5];
+const PRICE_MIN = 10;
+const PRICE_MAX = 60;
 
-const DEFAULTS = { type: 'All', low: 100, high: 350, review: 0, transmission: 'All', brand: 'All' };
+const DEFAULTS = { type: 'All', low: PRICE_MIN, high: PRICE_MAX, review: 0, transmission: 'All', brand: 'All' };
 
 export default function Filter() {
   const router = useRouter();
@@ -57,8 +60,8 @@ export default function Filter() {
 
         <Text style={styles.section}>Price Range (Hourly)</Text>
         <RangeSlider
-          min={50}
-          max={400}
+          min={PRICE_MIN}
+          max={PRICE_MAX}
           low={low}
           high={high}
           onChange={(l, h) => {
@@ -117,7 +120,13 @@ export default function Filter() {
           title="Apply"
           pill
           style={styles.applyBtn}
-          onPress={() => router.replace('/search-results?q=Car')}
+          onPress={() => {
+            const parts = [`low=${low}`, `high=${high}`, `rating=${REVIEW_MIN[review]}`];
+            if (type !== 'All') parts.push(`type=${encodeURIComponent(type)}`);
+            if (brand !== 'All') parts.push(`brand=${encodeURIComponent(brand)}`);
+            if (transmission !== 'All') parts.push(`transmission=${encodeURIComponent(transmission)}`);
+            router.replace(`/search-results?${parts.join('&')}`);
+          }}
         />
       </View>
     </View>

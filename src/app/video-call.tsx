@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -12,6 +13,9 @@ export default function VideoCall() {
   const insets = useSafeAreaInsets();
   const { name } = useLocalSearchParams<{ name?: string }>();
   const partner = name || 'Sheila Lemke';
+  const [speaker, setSpeaker] = useState(true);
+  const [muted, setMuted] = useState(true);
+  const [videoOff, setVideoOff] = useState(true);
 
   return (
     <View style={styles.container}>
@@ -36,22 +40,48 @@ export default function VideoCall() {
         <Text style={styles.duration}>12:08</Text>
 
         <View style={styles.controls}>
-          <Control icon="volume-high" />
-          <Control icon="mic-off" />
+          <Control
+            icon={speaker ? 'volume-high' : 'volume-mute'}
+            active={speaker}
+            onPress={() => setSpeaker((v) => !v)}
+          />
+          <Control
+            icon={muted ? 'mic-off' : 'mic'}
+            active={muted}
+            onPress={() => setMuted((v) => !v)}
+          />
           <Pressable style={styles.endCall} onPress={() => router.back()}>
             <Ionicons name="call" size={28} color={colors.white} style={{ transform: [{ rotate: '135deg' }] }} />
           </Pressable>
-          <Control icon="videocam-off" />
-          <Control icon="chatbubble" dot />
+          <Control
+            icon={videoOff ? 'videocam-off' : 'videocam'}
+            active={videoOff}
+            onPress={() => setVideoOff((v) => !v)}
+          />
+          <Control
+            icon="chatbubble"
+            dot
+            onPress={() => router.push(`/chat-thread?name=${encodeURIComponent(partner)}`)}
+          />
         </View>
       </View>
     </View>
   );
 }
 
-function Control({ icon, dot }: { icon: keyof typeof Ionicons.glyphMap; dot?: boolean }) {
+function Control({
+  icon,
+  dot,
+  active,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  dot?: boolean;
+  active?: boolean;
+  onPress?: () => void;
+}) {
   return (
-    <Pressable style={styles.control}>
+    <Pressable style={[styles.control, active && styles.controlActive]} onPress={onPress} hitSlop={6}>
       <Ionicons name={icon} size={24} color={colors.white} />
       {dot && <View style={styles.controlDot} />}
     </Pressable>
@@ -79,6 +109,7 @@ const styles = StyleSheet.create({
     marginTop: 22,
   },
   control: { width: 50, height: 50, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
+  controlActive: { backgroundColor: 'rgba(255,255,255,0.32)' },
   controlDot: { position: 'absolute', top: 12, right: 12, width: 8, height: 8, borderRadius: 4, backgroundColor: colors.heart },
   endCall: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.heart, alignItems: 'center', justifyContent: 'center', transform: [{ translateY: -14 }] },
 });

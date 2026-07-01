@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -13,6 +13,7 @@ import { colors, fontFamily } from '@/theme';
 export default function TopUpEWallet() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { amount } = useLocalSearchParams<{ amount?: string }>();
   const [selected, setSelected] = useState('Paypal');
 
   return (
@@ -45,7 +46,11 @@ export default function TopUpEWallet() {
       </ScrollView>
 
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom || 16 }]}>
-        <PrimaryButton title="Confirm Payment" pill onPress={() => router.push('/topup-success')} />
+        <PrimaryButton
+          title="Confirm Payment"
+          pill
+          onPress={() => router.push(`/topup-success?amount=${amount ?? 0}`)}
+        />
       </View>
     </View>
   );

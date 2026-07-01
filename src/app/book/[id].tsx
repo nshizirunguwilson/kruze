@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Header } from '@/components/ui/Header';
@@ -11,12 +11,51 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { CARS, getCar } from '@/data/cars';
 import { colors, fontFamily } from '@/theme';
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+const buildDates = () => {
+  const out: string[] = [];
+  const now = new Date();
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(now.getTime() + i * 86400000);
+    out.push(`${d.getDate()} ${MONTHS[d.getMonth()]}`);
+  }
+  return out;
+};
+
+const buildTimes = () => {
+  const out: string[] = [];
+  for (let h = 6; h <= 22; h++) {
+    const ampm = h < 12 ? 'AM' : 'PM';
+    const hh = h % 12 === 0 ? 12 : h % 12;
+    out.push(`${hh}:00 ${ampm}`);
+  }
+  return out;
+};
+
+type Field = 'pickupDate' | 'pickupTime' | 'returnDate' | 'returnTime';
+
 export default function BookCar() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const car = getCar(String(id)) ?? CARS[0];
   const [rentType, setRentType] = useState<'Self-Driver' | 'With Driver'>('Self-Driver');
+
+  const DATES = useMemo(buildDates, []);
+  const TIMES = useMemo(buildTimes, []);
+  const [values, setValues] = useState<Record<Field, string>>({
+    pickupDate: DATES[0],
+    pickupTime: '10:00 AM',
+    returnDate: DATES[1],
+    returnTime: '10:00 AM',
+  });
+  const [picker, setPicker] = useState<{ field: Field; kind: 'date' | 'time' } | null>(null);
+  const options = picker?.kind === 'date' ? DATES : TIMES;
+  const select = (v: string) => {
+    if (picker) setValues((prev) => ({ ...prev, [picker.field]: v }));
+    setPicker(null);
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
@@ -64,16 +103,61 @@ export default function BookCar() {
 
         <Text style={styles.section}>Pick-Up Date and Time</Text>
         <View style={styles.dateRow}>
-          <DateField label="Date" value="4 Oct" icon="calendar-outline" />
-          <DateField label="Time" value="10:00 AM" icon="time-outline" />
+          <DateField
+            label="Date"
+            value={values.pickupDate}
+            icon="calendar-outline"
+            onPress={() => setPicker({ field: 'pickupDate', kind: 'date' })}
+          />
+          <DateField
+            label="Time"
+            value={values.pickupTime}
+            icon="time-outline"
+            onPress={() => setPicker({ field: 'pickupTime', kind: 'time' })}
+          />
         </View>
 
         <Text style={styles.section}>Return Date and Time</Text>
         <View style={styles.dateRow}>
-          <DateField label="Date" value="5 Oct" icon="calendar-outline" />
-          <DateField label="Time" value="10:00 AM" icon="time-outline" />
+          <DateField
+            label="Date"
+            value={values.returnDate}
+            icon="calendar-outline"
+            onPress={() => setPicker({ field: 'returnDate', kind: 'date' })}
+          />
+          <DateField
+            label="Time"
+            value={values.returnTime}
+            icon="time-outline"
+            onPress={() => setPicker({ field: 'returnTime', kind: 'time' })}
+          />
         </View>
       </ScrollView>
+
+      <Modal
+        visible={!!picker}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setPicker(null)}>
+        <Pressable style={styles.backdrop} onPress={() => setPicker(null)} />
+        <View style={[styles.sheet, { paddingBottom: insets.bottom + 12 }]}>
+          <Text style={styles.sheetTitle}>
+            {picker?.kind === 'date' ? 'Select Date' : 'Select Time'}
+          </Text>
+          <View style={styles.sheetDivider} />
+          <ScrollView style={{ maxHeight: 340 }} showsVerticalScrollIndicator={false}>
+            {options.map((opt) => {
+              const current = picker ? values[picker.field] === opt : false;
+              return (
+                <Pressable key={opt} style={styles.optionRow} onPress={() => select(opt)}>
+                  <Text style={[styles.optionText, current && styles.optionTextOn]}>{opt}</Text>
+                  {current && <Ionicons name="checkmark" size={22} color={colors.primary} />}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+      </Modal>
 
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom || 16 }]}>
         <PrimaryButton title="Continue" pill onPress={() => router.push(`/book-info?id=${car.id}`)} />
@@ -86,13 +170,15 @@ function DateField({
   label,
   value,
   icon,
+  onPress,
 }: {
   label: string;
   value: string;
   icon: keyof typeof Ionicons.glyphMap;
+  onPress?: () => void;
 }) {
   return (
-    <Pressable style={styles.dateField}>
+    <Pressable style={styles.dateField} onPress={onPress}>
       <View>
         <Text style={styles.dateLabel}>{label}</Text>
         <Text style={styles.dateValue}>{value}</Text>
@@ -155,6 +241,26 @@ const styles = StyleSheet.create({
   },
   dateLabel: { fontFamily: fontFamily.regular, fontSize: 13, color: colors.textSecondary },
   dateValue: { marginTop: 3, fontFamily: fontFamily.semibold, fontSize: 16, color: colors.text },
+  backdrop: { flex: 1, backgroundColor: 'rgba(20,23,28,0.35)' },
+  sheet: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 24,
+    paddingTop: 22,
+  },
+  sheetTitle: { fontFamily: fontFamily.bold, fontSize: 20, color: colors.text, textAlign: 'center' },
+  sheetDivider: { height: 1, backgroundColor: colors.border, marginTop: 16 },
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  optionText: { fontFamily: fontFamily.medium, fontSize: 16, color: colors.text },
+  optionTextOn: { fontFamily: fontFamily.semibold, color: colors.primary },
   bottomBar: {
     position: 'absolute',
     bottom: 0,

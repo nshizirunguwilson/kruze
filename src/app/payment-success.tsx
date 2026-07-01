@@ -1,17 +1,35 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Header } from '@/components/ui/Header';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { CARS, getCar } from '@/data/cars';
+import { useBookings } from '@/state/bookings';
+import { useWallet } from '@/state/wallet';
 import { colors, fontFamily } from '@/theme';
 
 export default function PaymentSuccess() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, method } = useLocalSearchParams<{ id: string; method?: string }>();
+  const car = getCar(String(id)) ?? CARS[0];
+  const { addBooking } = useBookings();
+  const { spend } = useWallet();
+  const recorded = useRef(false);
+
+  // On success, create the booking once. Only deduct from the wallet when the wallet
+  // was the chosen payment method (card/PayPal/etc. are charged externally).
+  useEffect(() => {
+    if (recorded.current) return;
+    recorded.current = true;
+    const total = car.pricePerHour * 24 + 50;
+    addBooking({ carId: car.id, total, when: 'Upcoming trip' });
+    if (method === 'Wallet') spend(total, `Booking ${car.name}`);
+  }, [car, method, addBooking, spend]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 16 }]}>
@@ -29,7 +47,7 @@ export default function PaymentSuccess() {
       </View>
 
       <View style={styles.actions}>
-        <PrimaryButton title="View My Booking" pill onPress={() => router.replace('/home')} />
+        <PrimaryButton title="View My Booking" pill onPress={() => router.replace('/my-bookings')} />
         <Pressable
           style={styles.linkWrap}
           onPress={() => router.push(`/e-receipt?id=${id}`)}

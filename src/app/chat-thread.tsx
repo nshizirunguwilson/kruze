@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActionSheetIOS, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CircleBackButton } from '@/components/ui/CircleBackButton';
@@ -14,6 +14,25 @@ export default function ChatThread() {
   const insets = useSafeAreaInsets();
   const { name } = useLocalSearchParams<{ name?: string }>();
   const partner = name || 'Sheila Lemke';
+
+  const openMenu = () => {
+    const options = ['View Contact', 'Mute Notifications', 'Clear Chat', 'Cancel'];
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options, destructiveButtonIndex: 2, cancelButtonIndex: 3, title: partner },
+        (i) => {
+          if (i === 0) router.push('/rental-partner');
+          else if (i === 2) router.back();
+        },
+      );
+    } else {
+      Alert.alert(partner, undefined, [
+        { text: 'View Contact', onPress: () => router.push('/rental-partner') },
+        { text: 'Clear Chat', style: 'destructive', onPress: () => router.back() },
+        { text: 'Cancel', style: 'cancel' },
+      ]);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -27,9 +46,14 @@ export default function ChatThread() {
           <Text style={styles.name}>{partner}</Text>
           <Text style={styles.status}>Online</Text>
         </View>
-        <View style={styles.menuBtn}>
+        <Pressable
+          style={styles.callBtn}
+          onPress={() => router.push(`/video-call?name=${encodeURIComponent(partner)}`)}>
+          <Ionicons name="videocam" size={20} color={colors.primary} />
+        </Pressable>
+        <Pressable style={styles.menuBtn} onPress={openMenu} hitSlop={6}>
           <Ionicons name="ellipsis-vertical" size={20} color={colors.text} />
-        </View>
+        </Pressable>
       </View>
 
       <ScrollView
@@ -127,6 +151,7 @@ const styles = StyleSheet.create({
   avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surfaceGray, alignItems: 'center', justifyContent: 'center' },
   name: { fontFamily: fontFamily.bold, fontSize: 18, color: colors.white },
   status: { marginTop: 2, fontFamily: fontFamily.regular, fontSize: 13, color: 'rgba(255,255,255,0.85)' },
+  callBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
   menuBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
   dayLabel: { textAlign: 'center', fontFamily: fontFamily.semibold, fontSize: 14, letterSpacing: 2, color: colors.text, marginBottom: 16 },
   theirBubble: { alignSelf: 'flex-start', maxWidth: '78%', backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 16, borderTopLeftRadius: 4, padding: 16 },

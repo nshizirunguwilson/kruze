@@ -7,14 +7,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Header } from '@/components/ui/Header';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { useWallet } from '@/state/wallet';
 import { colors, fontFamily } from '@/theme';
 
 const PRESETS = [100, 200, 500, 1000, 2000, 3000, 4000, 5000];
+const money = (n: number) =>
+  `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export default function AddMoney() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { balance } = useWallet();
   const [amount, setAmount] = useState('');
+  const amountN = Number(amount) || 0;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
@@ -29,7 +34,7 @@ export default function AddMoney() {
         showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <Text style={styles.balanceLabel}>Wallet Balance</Text>
-          <Text style={styles.balanceValue}>$ 12000.00</Text>
+          <Text style={styles.balanceValue}>{money(balance)}</Text>
 
           <View style={styles.presets}>
             {PRESETS.map((p) => (
@@ -51,7 +56,12 @@ export default function AddMoney() {
             />
           </View>
 
-          <PrimaryButton title="Add Money" pill style={styles.addBtn} onPress={() => router.push('/topup-success')} />
+          <PrimaryButton
+            title="Add Money"
+            pill
+            style={styles.addBtn}
+            onPress={() => router.push(`/topup-ewallet?amount=${amountN}`)}
+          />
         </View>
       </ScrollView>
     </View>

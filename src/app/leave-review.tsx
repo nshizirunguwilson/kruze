@@ -27,6 +27,8 @@ export default function LeaveReview() {
   const car = getCar(String(id)) ?? CARS[0];
   const [rating, setRating] = useState(5);
   const [review, setReview] = useState('');
+  const [photos, setPhotos] = useState<number[]>([]);
+  const addPhoto = () => setPhotos((p) => [...p, p.length % car.gallery.length]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
@@ -39,7 +41,7 @@ export default function LeaveReview() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
-          contentContainerStyle={{ paddingBottom: 120 }}
+          contentContainerStyle={{ paddingBottom: 200 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
           <Image source={car.hero} style={styles.hero} contentFit="contain" />
@@ -83,10 +85,23 @@ export default function LeaveReview() {
               multiline
               textAlignVertical="top"
             />
-            <Pressable style={styles.photoRow} hitSlop={6}>
-              <Ionicons name="camera-outline" size={20} color={colors.primary} />
-              <Text style={styles.photoText}>add photo</Text>
-            </Pressable>
+            <View style={styles.photoWrap}>
+              {photos.map((g, i) => (
+                <View key={i} style={styles.photoThumb}>
+                  <Image source={car.gallery[g]} style={styles.photoImg} contentFit="contain" />
+                  <Pressable
+                    style={styles.photoRemove}
+                    hitSlop={6}
+                    onPress={() => setPhotos((p) => p.filter((_, idx) => idx !== i))}>
+                    <Ionicons name="close" size={13} color={colors.white} />
+                  </Pressable>
+                </View>
+              ))}
+              <Pressable style={styles.photoRow} hitSlop={6} onPress={addPhoto}>
+                <Ionicons name="camera-outline" size={20} color={colors.primary} />
+                <Text style={styles.photoText}>add photo</Text>
+              </Pressable>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -132,8 +147,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
   },
-  photoRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 },
+  photoWrap: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12, marginTop: 16 },
+  photoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   photoText: { fontFamily: fontFamily.semibold, fontSize: 15, color: colors.primary },
+  photoThumb: { width: 64, height: 64, borderRadius: 12, backgroundColor: colors.surfaceGray, alignItems: 'center', justifyContent: 'center' },
+  photoImg: { width: '86%', height: '86%' },
+  photoRemove: { position: 'absolute', top: -6, right: -6, width: 22, height: 22, borderRadius: 11, backgroundColor: colors.heart, alignItems: 'center', justifyContent: 'center' },
   bottomBar: {
     position: 'absolute',
     bottom: 0,

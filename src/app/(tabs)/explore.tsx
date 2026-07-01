@@ -1,97 +1,101 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Dimensions, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CarCard } from '@/components/cars/CarCard';
-import { CARS } from '@/data/cars';
+import { MapPlaceholder } from '@/components/ui/MapPlaceholder';
+import { popularCars } from '@/data/cars';
+import { useFavorites } from '@/state/favorites';
 import { colors, fontFamily } from '@/theme';
 
-const RECENT = ['Toyota Land Cruiser', 'Toyota Camry', 'Toyota RAV4'];
-const recentlyViewed = CARS.slice(1, 3);
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = width - 80;
 
 export default function Explore() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [query, setQuery] = useState('');
-  const [recent, setRecent] = useState(RECENT);
-
-  const submit = (q: string) => router.push(`/search-results?q=${encodeURIComponent(q || 'Car')}`);
+  const { isFavorite, toggle } = useFavorites();
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
+    <View style={styles.container}>
       <StatusBar style="dark" />
-      <View style={styles.searchField}>
-        <Ionicons name="search" size={20} color={colors.primary} />
-        <TextInput
-          style={styles.input}
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search.."
-          placeholderTextColor={colors.textSecondary}
-          returnKeyType="search"
-          onSubmitEditing={() => submit(query)}
-        />
-        {query.length > 0 && (
-          <Pressable onPress={() => setQuery('')} hitSlop={8}>
-            <Ionicons name="close-circle" size={22} color={colors.primary} />
-          </Pressable>
-        )}
+      <MapPlaceholder full mode="search" />
+
+      {/* Search bar overlay */}
+      <View style={[styles.searchRow, { top: insets.top + 12 }]}>
+        <Pressable style={styles.search} onPress={() => router.push('/search')}>
+          <Ionicons name="search" size={20} color={colors.textSecondary} />
+          <TextInput
+            style={styles.input}
+            placeholder="Search Car"
+            placeholderTextColor={colors.textSecondary}
+            editable={false}
+            pointerEvents="none"
+          />
+        </Pressable>
+        <Pressable style={styles.toggle} onPress={() => router.push('/search-results?q=Car')}>
+          <Ionicons name="list" size={24} color={colors.white} />
+        </Pressable>
       </View>
 
+      {/* Nearby cars carousel */}
       <ScrollView
-        contentContainerStyle={{ paddingBottom: insets.bottom + 110 }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
-        <Text style={styles.sectionTitle}>Recent Search</Text>
-        {recent.map((term) => (
-          <Pressable key={term} style={styles.recentRow} onPress={() => submit(term)}>
-            <Text style={styles.recentText}>{term}</Text>
-            <Pressable onPress={() => setRecent((r) => r.filter((t) => t !== term))} hitSlop={10}>
-              <Ionicons name="close" size={20} color={colors.textSecondary} />
-            </Pressable>
-          </Pressable>
-        ))}
-
-        <Text style={[styles.sectionTitle, { marginTop: 28 }]}>Recent View</Text>
-        <View style={styles.list}>
-          {recentlyViewed.map((car) => (
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        snapToInterval={CARD_WIDTH + 16}
+        decelerationRate="fast"
+        contentContainerStyle={[styles.carousel, { paddingBottom: insets.bottom + 78 }]}
+        style={styles.carouselWrap}>
+        {popularCars.map((car) => (
+          <View key={car.id} style={{ width: CARD_WIDTH, marginRight: 16 }}>
             <CarCard
-              key={car.id}
               car={car}
-              image={car.hero}
-              favorite
+              favorite={isFavorite(car.id)}
+              onToggleFavorite={() => toggle(car.id)}
               onPress={() => router.push(`/car/${car.id}`)}
             />
-          ))}
-        </View>
+          </View>
+        ))}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white, paddingHorizontal: 24 },
-  searchField: {
+  container: { flex: 1, backgroundColor: colors.white },
+  searchRow: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    gap: 12,
+  },
+  search: {
+    flex: 1,
+    height: 54,
+    borderRadius: 14,
+    backgroundColor: colors.white,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: colors.surfaceGray,
     paddingHorizontal: 16,
-    marginBottom: 8,
+    gap: 10,
+    shadowColor: '#1B2A4A',
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   input: { flex: 1, fontFamily: fontFamily.regular, fontSize: 16, color: colors.text },
-  sectionTitle: { marginTop: 20, fontFamily: fontFamily.bold, fontSize: 20, color: colors.text },
-  recentRow: {
-    flexDirection: 'row',
+  toggle: {
+    width: 54,
+    height: 54,
+    borderRadius: 14,
+    backgroundColor: colors.primary,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
+    justifyContent: 'center',
   },
-  recentText: { fontFamily: fontFamily.regular, fontSize: 17, color: colors.textSecondary },
-  list: { gap: 20, marginTop: 16 },
+  carouselWrap: { position: 'absolute', left: 0, right: 0, bottom: 0 },
+  carousel: { paddingHorizontal: 24, paddingTop: 12 },
 });

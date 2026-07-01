@@ -6,11 +6,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CarCard } from '@/components/cars/CarCard';
 import { Header } from '@/components/ui/Header';
 import { popularCars } from '@/data/cars';
+import { useFavorites } from '@/state/favorites';
 import { colors } from '@/theme';
 
 export default function SeeAll() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { isFavorite, toggle } = useFavorites();
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
@@ -26,6 +28,8 @@ export default function SeeAll() {
             key={car.id}
             car={car}
             image={car.hero}
+            favorite={isFavorite(car.id)}
+            onToggleFavorite={() => toggle(car.id)}
             onPress={() => router.push(`/car/${car.id}`)}
           />
         ))}

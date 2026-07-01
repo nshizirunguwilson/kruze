@@ -11,12 +11,15 @@ import { colors } from '@/theme';
 export function MapPlaceholder({
   style,
   full,
+  mode = 'route',
 }: {
   style?: ViewStyle;
-  /** Full-bleed variant (Get Direction / Navigate screens). */
+  /** Full-bleed variant (Get Direction / Navigate / Search screens). */
   full?: boolean;
+  /** 'route' shows a journey line + pins; 'search' shows a nearby-cars radius. */
+  mode?: 'route' | 'search';
 }) {
-  if (full) return <FullMap style={style} />;
+  if (full) return <FullMap style={style} mode={mode} />;
 
   return (
     <View style={[styles.map, styles.card, style]}>
@@ -49,8 +52,8 @@ export function MapPlaceholder({
   );
 }
 
-/** Detailed street map for the Get Direction / Navigate screens. */
-function FullMap({ style }: { style?: ViewStyle }) {
+/** Detailed street map for the Get Direction / Navigate / Search screens. */
+function FullMap({ style, mode }: { style?: ViewStyle; mode: 'route' | 'search' }) {
   const W = 390;
   const H = 844;
   const street = '#FFFFFF';
@@ -136,27 +139,50 @@ function FullMap({ style }: { style?: ViewStyle }) {
           </SvgText>
         ))}
 
-        {/* route */}
-        <Path d={route} stroke={colors.text} strokeWidth={5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        {/* route (only in route mode) */}
+        {mode === 'route' && (
+          <Path d={route} stroke={colors.text} strokeWidth={5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        )}
       </Svg>
 
-      {/* destination pin (avatar) */}
-      <View style={[styles.pin, { left: '38.5%', top: '35.5%' }]}>
-        <View style={styles.avatarPin}>
-          <View style={styles.avatarPinInner}>
-            <Ionicons name="person" size={20} color={colors.textSecondary} />
+      {mode === 'route' ? (
+        <>
+          {/* destination pin (avatar) */}
+          <View style={[styles.pin, { left: '38.5%', top: '35.5%' }]}>
+            <View style={styles.avatarPin}>
+              <View style={styles.avatarPinInner}>
+                <Ionicons name="person" size={20} color={colors.textSecondary} />
+              </View>
+            </View>
           </View>
-        </View>
-      </View>
 
-      {/* origin pin (current location, nav arrow) */}
-      <View style={[styles.pin, { left: '38.5%', top: '75.8%' }]}>
-        <View style={styles.originGlow}>
-          <View style={styles.originPin}>
-            <Ionicons name="navigate" size={16} color={colors.white} />
+          {/* origin pin (current location, nav arrow) */}
+          <View style={[styles.pin, { left: '38.5%', top: '75.8%' }]}>
+            <View style={styles.originGlow}>
+              <View style={styles.originPin}>
+                <Ionicons name="navigate" size={16} color={colors.white} />
+              </View>
+            </View>
           </View>
-        </View>
-      </View>
+        </>
+      ) : (
+        <>
+          {/* nearby-cars search radius */}
+          <View style={styles.radius} />
+          {/* center (current location) */}
+          <View style={[styles.pin, { left: '50%', top: '46%' }]}>
+            <View style={styles.centerDot} />
+          </View>
+          {/* scattered car pins */}
+          {CAR_PINS.map((p, i) => (
+            <View key={i} style={[styles.pin, { left: p.left, top: p.top }]}>
+              <View style={styles.carPin}>
+                <Ionicons name="car-sport" size={13} color={colors.white} />
+              </View>
+            </View>
+          ))}
+        </>
+      )}
 
       {/* recenter button */}
       <View style={styles.recenter}>
@@ -166,11 +192,48 @@ function FullMap({ style }: { style?: ViewStyle }) {
   );
 }
 
+const CAR_PINS: Array<{ left: `${number}%`; top: `${number}%` }> = [
+  { left: '30%', top: '30%' },
+  { left: '67%', top: '34%' },
+  { left: '24%', top: '58%' },
+  { left: '72%', top: '60%' },
+  { left: '52%', top: '66%' },
+];
+
 const styles = StyleSheet.create({
   map: { backgroundColor: '#EEF1F5', overflow: 'hidden' },
   card: { height: 150, borderRadius: 16 },
   full: { flex: 1 },
   pin: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
+  radius: {
+    position: 'absolute',
+    left: '14%',
+    top: '20%',
+    width: '72%',
+    height: '52%',
+    borderRadius: 999,
+    backgroundColor: 'rgba(2,125,252,0.14)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(2,125,252,0.4)',
+  },
+  centerDot: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: colors.primary,
+    borderWidth: 4,
+    borderColor: colors.white,
+  },
+  carPin: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.white,
+  },
   originDot: {
     width: 18,
     height: 18,

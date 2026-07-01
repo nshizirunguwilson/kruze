@@ -42,9 +42,9 @@ export default function Profile() {
           <View style={styles.avatar}>
             <Ionicons name="person" size={56} color={colors.textSecondary} />
           </View>
-          <View style={styles.editBadge}>
+          <Pressable style={styles.editBadge} onPress={() => router.push('/your-profile')}>
             <Ionicons name="pencil" size={15} color={colors.white} />
-          </View>
+          </Pressable>
         </View>
         <Text style={styles.name}>Esther Howard</Text>
 

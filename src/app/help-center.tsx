@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Chip } from '@/components/ui/Chip';
@@ -25,12 +25,12 @@ const FAQS = [
 ];
 
 const CONTACTS = [
-  { icon: 'headset', label: 'Customer Service', sub: '' },
-  { icon: 'logo-whatsapp', label: 'WhatsApp', sub: '(480) 555-0103' },
-  { icon: 'globe-outline', label: 'Website', sub: '' },
-  { icon: 'logo-facebook', label: 'Facebook', sub: '' },
-  { icon: 'logo-twitter', label: 'Twitter', sub: '' },
-  { icon: 'logo-instagram', label: 'Instagram', sub: '' },
+  { icon: 'headset', label: 'Customer Service', sub: '', url: 'tel:+14805550103' },
+  { icon: 'logo-whatsapp', label: 'WhatsApp', sub: '(480) 555-0103', url: 'https://wa.me/14805550103' },
+  { icon: 'globe-outline', label: 'Website', sub: '', url: 'https://www.toyota.com' },
+  { icon: 'logo-facebook', label: 'Facebook', sub: '', url: 'https://facebook.com/toyota' },
+  { icon: 'logo-twitter', label: 'Twitter', sub: '', url: 'https://twitter.com/toyota' },
+  { icon: 'logo-instagram', label: 'Instagram', sub: '', url: 'https://instagram.com/toyota' },
 ] as const;
 
 export default function HelpCenter() {
@@ -89,7 +89,10 @@ export default function HelpCenter() {
         ) : (
           <View style={{ marginTop: 16 }}>
             {CONTACTS.map((c) => (
-              <Pressable key={c.label} style={styles.contact}>
+              <Pressable
+                key={c.label}
+                style={styles.contact}
+                onPress={() => Linking.openURL(c.url).catch(() => {})}>
                 <View style={styles.contactIcon}>
                   <Ionicons name={c.icon as never} size={20} color={colors.primary} />
                 </View>

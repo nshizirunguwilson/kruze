@@ -8,13 +8,22 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppleIcon, GoogleIcon } from '@/components/icons/SocialIcons';
 import { Header } from '@/components/ui/Header';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { CARS, formatPrice, getCar } from '@/data/cars';
+import { useWallet } from '@/state/wallet';
 import { colors, fontFamily } from '@/theme';
 
 export default function PaymentMethods() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [selected, setSelected] = useState('');
+  const car = getCar(String(id)) ?? CARS[0];
+  const total = car.pricePerHour * 24 + 50;
+  const { balance } = useWallet();
+  const canAffordWallet = balance >= total;
+
+  // Default to the wallet when it can cover the trip, otherwise leave unselected.
+  const [selected, setSelected] = useState(canAffordWallet ? 'Wallet' : '');
+  const canConfirm = selected !== '' && (selected !== 'Wallet' || canAffordWallet);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
@@ -24,9 +33,36 @@ export default function PaymentMethods() {
       </View>
 
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 130 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 150 }}
         showsVerticalScrollIndicator={false}>
-        <Text style={[styles.section, { marginTop: 8 }]}>Credit & Debit Card</Text>
+        <Text style={[styles.section, { marginTop: 8 }]}>Wallet</Text>
+        <Pressable
+          style={[styles.method, selected === 'Wallet' && styles.methodSelected]}
+          onPress={() => canAffordWallet && setSelected('Wallet')}>
+          <View style={styles.methodLeft}>
+            <Ionicons name="wallet" size={22} color={colors.primary} />
+            <View>
+              <Text style={styles.walletLabel}>Wallet Balance</Text>
+              <Text style={[styles.walletBalance, !canAffordWallet && { color: colors.heart }]}>
+                {formatPrice(balance)}
+              </Text>
+            </View>
+          </View>
+          {canAffordWallet ? (
+            <View style={[styles.radio, selected === 'Wallet' && styles.radioOn]}>
+              {selected === 'Wallet' && <View style={styles.radioDot} />}
+            </View>
+          ) : (
+            <Text style={styles.insufficient}>Insufficient</Text>
+          )}
+        </Pressable>
+        {!canAffordWallet && (
+          <Text style={styles.insufficientNote}>
+            Wallet balance is too low for this {formatPrice(total)} booking. Top up or pay by card.
+          </Text>
+        )}
+
+        <Text style={styles.section}>Credit & Debit Card</Text>
         <Pressable style={styles.method} onPress={() => router.push('/add-card')}>
           <View style={styles.methodLeft}>
             <Ionicons name="card" size={22} color={colors.primary} />
@@ -64,10 +100,17 @@ export default function PaymentMethods() {
       </ScrollView>
 
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom || 16 }]}>
+        <View style={styles.totalRow}>
+          <Text style={styles.totalLabel}>Total</Text>
+          <Text style={styles.totalValue}>{formatPrice(total)}</Text>
+        </View>
         <PrimaryButton
           title="Confirm Payment"
           pill
-          onPress={() => router.push(`/payment-success?id=${id}`)}
+          disabled={!canConfirm}
+          onPress={() =>
+            router.push(`/payment-success?id=${id}&method=${encodeURIComponent(selected)}`)
+          }
         />
       </View>
     </View>
@@ -115,8 +158,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   methodFlat: { borderWidth: 0, borderRadius: 0 },
+  methodSelected: { borderColor: colors.primary, backgroundColor: colors.primaryTint },
   methodLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   methodLabel: { fontFamily: fontFamily.medium, fontSize: 16, color: colors.textSecondary },
+  walletLabel: { fontFamily: fontFamily.regular, fontSize: 13, color: colors.textSecondary },
+  walletBalance: { marginTop: 2, fontFamily: fontFamily.bold, fontSize: 17, color: colors.text },
+  insufficient: { fontFamily: fontFamily.semibold, fontSize: 14, color: colors.heart },
+  insufficientNote: { marginTop: 8, fontFamily: fontFamily.regular, fontSize: 13, lineHeight: 19, color: colors.heart },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  totalLabel: { fontFamily: fontFamily.medium, fontSize: 16, color: colors.textSecondary },
+  totalValue: { fontFamily: fontFamily.bold, fontSize: 20, color: colors.text },
   group: { borderWidth: 1, borderColor: colors.border, borderRadius: 14, paddingHorizontal: 16 },
   groupDivider: { height: 1, backgroundColor: colors.border },
   radio: {

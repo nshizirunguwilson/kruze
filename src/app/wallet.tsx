@@ -6,33 +6,28 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Header } from '@/components/ui/Header';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { useWallet } from '@/state/wallet';
 import { colors, fontFamily } from '@/theme';
 
-type Txn = { title: string; date: string; amount: number; balance: string };
-
-const GROUPS: { label: string; items: Txn[] }[] = [
-  {
-    label: 'Today',
-    items: [{ title: 'Money Added to Wallet', date: '24 October | 7:30 AM', amount: 500, balance: '$12,000.00' }],
-  },
-  {
-    label: 'Yesterday',
-    items: [{ title: 'Booking No #34234', date: '23 October | 5:30 AM', amount: -500, balance: '$11,250.00' }],
-  },
-  {
-    label: '22 September 2023',
-    items: [
-      { title: 'Refund for Booking #34234', date: '22 October | 7:30 AM', amount: 500, balance: '$11,250.00' },
-      { title: 'Booking #34234', date: '22 October | 7:30 AM', amount: -250, balance: '$11,250.00' },
-      { title: 'Booking #34234', date: '22 October | 7:30 AM', amount: -250, balance: '$11,250.00' },
-      { title: 'Booking #34234', date: '22 October | 7:30 AM', amount: -250, balance: '$11,250.00' },
-    ],
-  },
-];
+const money = (n: number) =>
+  `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export default function Wallet() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { balance, transactions } = useWallet();
+
+  // Group transactions in order, and compute the running balance shown per row
+  // (newest transaction reflects the current balance, older rows subtract back).
+  const groups: { label: string; items: { title: string; date: string; amount: number; balance: string }[] }[] = [];
+  let running = balance;
+  for (const t of transactions) {
+    const row = { title: t.title, date: t.date, amount: t.amount, balance: money(running) };
+    running -= t.amount;
+    const g = groups.find((x) => x.label === t.group);
+    if (g) g.items.push(row);
+    else groups.push({ label: t.group, items: [row] });
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
@@ -48,7 +43,7 @@ export default function Wallet() {
           <View style={styles.balanceTop}>
             <View>
               <Text style={styles.balanceLabel}>Wallet Balance</Text>
-              <Text style={styles.balanceValue}>$ 12000.00</Text>
+              <Text style={styles.balanceValue}>{money(balance)}</Text>
             </View>
             <View style={styles.walletIcon}>
               <Ionicons name="wallet" size={22} color={colors.primary} />
@@ -57,7 +52,7 @@ export default function Wallet() {
           <PrimaryButton title="Add Money" pill style={styles.addBtn} onPress={() => router.push('/add-money')} />
         </View>
 
-        {GROUPS.map((group) => (
+        {groups.map((group) => (
           <View key={group.label}>
             <Text style={styles.groupLabel}>{group.label}</Text>
             {group.items.map((txn, i) => (

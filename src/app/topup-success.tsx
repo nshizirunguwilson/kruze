@@ -1,16 +1,32 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Header } from '@/components/ui/Header';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { useWallet } from '@/state/wallet';
 import { colors, fontFamily } from '@/theme';
+
+const money = (n: number) =>
+  `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export default function TopUpSuccess() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { amount } = useLocalSearchParams<{ amount?: string }>();
+  const { addMoney } = useWallet();
+  const amountN = Number(amount) || 0;
+  const credited = useRef(false);
+
+  // Credit the wallet exactly once when this success screen mounts.
+  useEffect(() => {
+    if (credited.current) return;
+    credited.current = true;
+    if (amountN > 0) addMoney(amountN);
+  }, [amountN, addMoney]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 16 }]}>
@@ -22,7 +38,9 @@ export default function TopUpSuccess() {
           <Ionicons name="checkmark" size={58} color={colors.white} />
         </View>
         <Text style={styles.title}>Top Up Successful!</Text>
-        <Text style={styles.subtitle}>You have successfully topped up your e-wallet for $500.00</Text>
+        <Text style={styles.subtitle}>
+          You have successfully topped up your e-wallet for {money(amountN)}
+        </Text>
       </View>
 
       <PrimaryButton title="OK" pill onPress={() => router.replace('/wallet')} />

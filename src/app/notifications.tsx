@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CircleBackButton } from '@/components/ui/CircleBackButton';
@@ -48,6 +49,7 @@ const YESTERDAY: Note[] = [
 export default function Notifications() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const [read, setRead] = useState(false);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
@@ -57,27 +59,47 @@ export default function Notifications() {
         <Text style={styles.title} pointerEvents="none">
           Notification
         </Text>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>2 NEW</Text>
-        </View>
+        {read ? (
+          <View style={{ width: 46 }} />
+        ) : (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>2 NEW</Text>
+          </View>
+        )}
       </View>
 
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: insets.bottom + 24 }}
         showsVerticalScrollIndicator={false}>
-        <Section label="TODAY" notes={TODAY} />
-        <Section label="YESTERDAY" notes={YESTERDAY} />
+        <Section label="TODAY" notes={TODAY} read={read} onMarkRead={() => setRead(true)} />
+        <Section label="YESTERDAY" notes={YESTERDAY} read={read} onMarkRead={() => setRead(true)} />
       </ScrollView>
     </View>
   );
 }
 
-function Section({ label, notes }: { label: string; notes: Note[] }) {
+function Section({
+  label,
+  notes,
+  read,
+  onMarkRead,
+}: {
+  label: string;
+  notes: Note[];
+  read: boolean;
+  onMarkRead: () => void;
+}) {
   return (
     <View>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionLabel}>{label}</Text>
-        <Text style={styles.markRead}>Mark all as read</Text>
+        {read ? (
+          <Text style={[styles.markRead, styles.markReadDone]}>All read</Text>
+        ) : (
+          <Pressable onPress={onMarkRead} hitSlop={8}>
+            <Text style={styles.markRead}>Mark all as read</Text>
+          </Pressable>
+        )}
       </View>
       {notes.map((n) => (
         <View key={n.title} style={styles.note}>
@@ -106,6 +128,7 @@ const styles = StyleSheet.create({
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 24, marginBottom: 8 },
   sectionLabel: { fontFamily: fontFamily.semibold, fontSize: 14, letterSpacing: 1, color: colors.textSecondary },
   markRead: { fontFamily: fontFamily.semibold, fontSize: 15, color: colors.primary },
+  markReadDone: { color: colors.textSecondary },
   note: { flexDirection: 'row', gap: 16, paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: colors.border },
   noteIcon: { width: 50, height: 50, borderRadius: 25, backgroundColor: colors.surfaceGray, alignItems: 'center', justifyContent: 'center' },
   noteTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

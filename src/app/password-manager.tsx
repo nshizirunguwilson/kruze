@@ -46,7 +46,10 @@ export default function PasswordManager() {
               placeholder="Enter current password"
               secure
               footer={
-                <Pressable style={styles.forgotWrap} hitSlop={8}>
+                <Pressable
+                  style={styles.forgotWrap}
+                  hitSlop={8}
+                  onPress={() => router.push('/new-password')}>
                   <Text style={styles.forgot}>Forgot Password?</Text>
                 </Pressable>
               }

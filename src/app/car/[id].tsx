@@ -3,12 +3,13 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, Share, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CircleBackButton } from '@/components/ui/CircleBackButton';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { CARS, formatPrice, getCar } from '@/data/cars';
+import { useFavorites } from '@/state/favorites';
 import { colors, fontFamily } from '@/theme';
 
 const TABS = ['About', 'Gallery', 'Review'] as const;
@@ -35,6 +36,13 @@ export default function CarDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const car = getCar(String(id)) ?? CARS[0];
   const [tab, setTab] = useState<Tab>('About');
+  const { isFavorite, toggle } = useFavorites();
+  const fav = isFavorite(car.id);
+
+  const onShare = () =>
+    Share.share({
+      message: `Check out the ${car.name} on Kruze, ${formatPrice(car.pricePerHour)}/hr.`,
+    }).catch(() => {});
 
   return (
     <View style={styles.container}>
@@ -47,12 +55,16 @@ export default function CarDetails() {
             <CircleBackButton onPress={() => router.back()} />
             <Text style={styles.headerTitle}>Car Details</Text>
             <View style={styles.headerActions}>
-              <View style={styles.roundBtn}>
+              <Pressable style={styles.roundBtn} onPress={onShare} hitSlop={6}>
                 <Ionicons name="share-social-outline" size={20} color={colors.text} />
-              </View>
-              <View style={styles.roundBtn}>
-                <Ionicons name="heart-outline" size={20} color={colors.text} />
-              </View>
+              </Pressable>
+              <Pressable style={styles.roundBtn} onPress={() => toggle(car.id)} hitSlop={6}>
+                <Ionicons
+                  name={fav ? 'heart' : 'heart-outline'}
+                  size={20}
+                  color={fav ? colors.heart : colors.text}
+                />
+              </Pressable>
             </View>
           </View>
 
@@ -104,7 +116,7 @@ export default function CarDetails() {
 
           {tab === 'About' && <AboutTab description={car.description} />}
           {tab === 'Gallery' && <GalleryTab car={car} />}
-          {tab === 'Review' && <ReviewTab />}
+          {tab === 'Review' && <ReviewTab carId={car.id} />}
         </View>
       </ScrollView>
 
@@ -127,26 +139,32 @@ export default function CarDetails() {
 }
 
 function AboutTab({ description }: { description: string }) {
+  const router = useRouter();
+  const partner = 'Jenny Doe';
   return (
     <View>
       <Text style={styles.blockTitle}>Rent Partner</Text>
-      <View style={styles.partnerRow}>
+      <Pressable style={styles.partnerRow} onPress={() => router.push('/rental-partner')}>
         <View style={styles.avatar}>
           <Ionicons name="person" size={28} color={colors.textSecondary} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.partnerName}>Jenny Doe</Text>
+          <Text style={styles.partnerName}>{partner}</Text>
           <Text style={styles.partnerRole}>Owner</Text>
         </View>
         <View style={styles.partnerActions}>
-          <View style={styles.actionCircle}>
+          <Pressable
+            style={styles.actionCircle}
+            onPress={() => router.push(`/chat-thread?name=${encodeURIComponent(partner)}`)}>
             <Ionicons name="chatbubble-ellipses" size={18} color={colors.primary} />
-          </View>
-          <View style={styles.actionCircle}>
+          </Pressable>
+          <Pressable
+            style={styles.actionCircle}
+            onPress={() => router.push(`/video-call?name=${encodeURIComponent(partner)}`)}>
             <Ionicons name="call" size={18} color={colors.primary} />
-          </View>
+          </Pressable>
         </View>
-      </View>
+      </Pressable>
       <Text style={styles.blockTitle}>About</Text>
       <Text style={styles.about}>{description}</Text>
     </View>
@@ -173,7 +191,8 @@ function GalleryTab({ car }: { car: (typeof CARS)[number] }) {
   );
 }
 
-function ReviewTab() {
+function ReviewTab({ carId }: { carId: string }) {
+  const router = useRouter();
   const FILTERS = ['Verified', 'Latest', 'With Photos'];
   const [active, setActive] = useState(['Verified', 'Latest']);
   const toggle = (f: string) =>
@@ -183,10 +202,10 @@ function ReviewTab() {
     <View>
       <View style={styles.galleryHeader}>
         <Text style={styles.blockTitle}>Reviews</Text>
-        <View style={styles.addReview}>
+        <Pressable style={styles.addReview} onPress={() => router.push(`/leave-review?id=${carId}`)} hitSlop={8}>
           <Ionicons name="create-outline" size={18} color={colors.primary} />
           <Text style={styles.viewAll}>add review</Text>
-        </View>
+        </Pressable>
       </View>
       <View style={styles.reviewSearch}>
         <Ionicons name="search" size={20} color={colors.primary} />

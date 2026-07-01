@@ -2,12 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CarCard } from '@/components/cars/CarCard';
 import { CircleBackButton } from '@/components/ui/CircleBackButton';
 import { popularCars } from '@/data/cars';
+import { useFavorites } from '@/state/favorites';
 import { colors, fontFamily } from '@/theme';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -23,6 +24,7 @@ export default function RentalPartner() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<'About' | 'Cars'>('About');
+  const { isFavorite, toggle } = useFavorites();
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
@@ -32,9 +34,15 @@ export default function RentalPartner() {
         <Text style={styles.headerTitle} pointerEvents="none">
           Rental Partner
         </Text>
-        <View style={styles.shareBtn}>
+        <Pressable
+          style={styles.shareBtn}
+          onPress={() =>
+            Share.share({ message: 'Check out Jenny Doe, a top rental partner on Kruze.' }).catch(
+              () => {},
+            )
+          }>
           <Ionicons name="share-social-outline" size={20} color={colors.text} />
-        </View>
+        </Pressable>
       </View>
 
       <ScrollView
@@ -108,7 +116,14 @@ export default function RentalPartner() {
             </View>
             <View style={{ gap: 20, marginTop: 8 }}>
               {popularCars.slice(0, 3).map((car) => (
-                <CarCard key={car.id} car={car} image={car.hero} onPress={() => router.push(`/car/${car.id}`)} />
+                <CarCard
+                  key={car.id}
+                  car={car}
+                  image={car.hero}
+                  favorite={isFavorite(car.id)}
+                  onToggleFavorite={() => toggle(car.id)}
+                  onPress={() => router.push(`/car/${car.id}`)}
+                />
               ))}
             </View>
           </View>

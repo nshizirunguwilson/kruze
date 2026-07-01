@@ -7,11 +7,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CarCard } from '@/components/cars/CarCard';
 import { BRANDS } from '@/components/icons/BrandIcons';
 import { popularCars } from '@/data/cars';
+import { useFavorites } from '@/state/favorites';
 import { colors, fontFamily } from '@/theme';
 
 export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { isFavorite, toggle } = useFavorites();
 
   return (
     <View style={styles.container}>
@@ -22,20 +24,20 @@ export default function Home() {
         <View style={styles.headerTop}>
           <View>
             <Text style={styles.locationLabel}>Location</Text>
-            <Pressable style={styles.locationRow}>
+            <Pressable style={styles.locationRow} onPress={() => router.push('/enter-location')}>
               <Ionicons name="location" size={18} color={colors.white} />
               <Text style={styles.city}>New York, USA</Text>
               <Ionicons name="chevron-down" size={16} color={colors.white} />
             </Pressable>
           </View>
-          <Pressable style={styles.bell}>
+          <Pressable style={styles.bell} onPress={() => router.push('/notifications')}>
             <Ionicons name="notifications-outline" size={22} color={colors.primary} />
             <View style={styles.bellDot} />
           </Pressable>
         </View>
 
         <View style={styles.searchRow}>
-          <Pressable style={styles.search} onPress={() => router.push('/explore')}>
+          <Pressable style={styles.search} onPress={() => router.push('/search')}>
             <Ionicons name="search" size={20} color={colors.textSecondary} />
             <Text style={styles.searchText}>Search</Text>
           </Pressable>
@@ -52,19 +54,28 @@ export default function Home() {
         <SectionHeader title="Brands" onSeeAll={() => router.push('/explore')} />
         <View style={styles.brandsRow}>
           {BRANDS.map(({ name, Icon }) => (
-            <View key={name} style={styles.brandItem}>
+            <Pressable
+              key={name}
+              style={styles.brandItem}
+              onPress={() => router.push(`/search-results?q=${encodeURIComponent(name)}`)}>
               <View style={styles.brandCircle}>
                 <Icon size={32} />
               </View>
               <Text style={styles.brandName}>{name}</Text>
-            </View>
+            </Pressable>
           ))}
         </View>
 
         <SectionHeader title="Popular Car" onSeeAll={() => router.push('/see-all')} />
         <View style={styles.list}>
           {popularCars.map((car) => (
-            <CarCard key={car.id} car={car} onPress={() => router.push(`/car/${car.id}`)} />
+            <CarCard
+              key={car.id}
+              car={car}
+              favorite={isFavorite(car.id)}
+              onToggleFavorite={() => toggle(car.id)}
+              onPress={() => router.push(`/car/${car.id}`)}
+            />
           ))}
         </View>
       </ScrollView>

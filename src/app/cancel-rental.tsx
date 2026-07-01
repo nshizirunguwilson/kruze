@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Header } from '@/components/ui/Header';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { useBookings } from '@/state/bookings';
 import { colors, fontFamily } from '@/theme';
 
 const REASONS = [
@@ -22,6 +23,8 @@ export default function CancelRental() {
   const insets = useSafeAreaInsets();
   const [selected, setSelected] = useState(0);
   const [other, setOther] = useState('');
+  const { bookingId } = useLocalSearchParams<{ bookingId?: string }>();
+  const { cancelBooking } = useBookings();
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
@@ -59,7 +62,14 @@ export default function CancelRental() {
       </ScrollView>
 
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom || 16 }]}>
-        <PrimaryButton title="Cancel Ride" pill onPress={() => router.replace('/my-bookings?tab=Cancelled')} />
+        <PrimaryButton
+          title="Cancel Ride"
+          pill
+          onPress={() => {
+            if (bookingId) cancelBooking(bookingId);
+            router.replace('/my-bookings?tab=Cancelled');
+          }}
+        />
       </View>
     </View>
   );

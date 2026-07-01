@@ -10,15 +10,12 @@ import { SpecsRow } from '@/components/cars/SpecsRow';
 import { CircleBackButton } from '@/components/ui/CircleBackButton';
 import { MapPlaceholder } from '@/components/ui/MapPlaceholder';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { CARS, formatPrice } from '@/data/cars';
+import { CARS, formatPrice, getCar } from '@/data/cars';
+import { Booking, useBookings } from '@/state/bookings';
 import { colors, fontFamily } from '@/theme';
 
 const TABS = ['Upcoming', 'Completed', 'Cancelled'] as const;
 type Tab = (typeof TABS)[number];
-
-const upcoming = CARS.slice(1, 2);
-const completed = CARS.slice(0, 2);
-const cancelled = CARS.slice(2, 4);
 
 export default function MyBookings() {
   const router = useRouter();
@@ -26,6 +23,8 @@ export default function MyBookings() {
   const { tab } = useLocalSearchParams<{ tab?: string }>();
   const initial = (TABS.includes(tab as Tab) ? tab : 'Upcoming') as Tab;
   const [active, setActive] = useState<Tab>(initial);
+  const { byStatus } = useBookings();
+  const rows = byStatus(active);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
@@ -50,12 +49,20 @@ export default function MyBookings() {
       <ScrollView
         contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 24 }]}
         showsVerticalScrollIndicator={false}>
-        {active === 'Upcoming' &&
-          upcoming.map((car) => <UpcomingCard key={car.id} car={car} router={router} />)}
-        {active === 'Completed' &&
-          completed.map((car) => <CompletedCard key={car.id} car={car} router={router} />)}
-        {active === 'Cancelled' &&
-          cancelled.map((car) => <CancelledCard key={car.id} car={car} router={router} />)}
+        {rows.length === 0 ? (
+          <View style={styles.empty}>
+            <Ionicons name="clipboard-outline" size={52} color={colors.textMuted} />
+            <Text style={styles.emptyTitle}>No {active.toLowerCase()} bookings</Text>
+            <Text style={styles.emptyText}>Your {active.toLowerCase()} rentals will appear here.</Text>
+          </View>
+        ) : (
+          rows.map((b) => {
+            const car = getCar(b.carId) ?? CARS[0];
+            if (active === 'Upcoming') return <UpcomingCard key={b.id} car={car} booking={b} router={router} />;
+            if (active === 'Completed') return <CompletedCard key={b.id} car={car} router={router} />;
+            return <CancelledCard key={b.id} car={car} router={router} />;
+          })
+        )}
       </ScrollView>
     </View>
   );
@@ -88,7 +95,7 @@ function CarHeader({ car }: { car: (typeof CARS)[number] }) {
   );
 }
 
-function UpcomingCard({ car, router }: CardProps) {
+function UpcomingCard({ car, booking, router }: CardProps & { booking: Booking }) {
   return (
     <View style={styles.card}>
       <CarHeader car={car} />
@@ -100,7 +107,7 @@ function UpcomingCard({ car, router }: CardProps) {
       </View>
       <MapPlaceholder style={{ marginTop: 12 }} />
       <View style={styles.actionRow}>
-        <Pressable style={styles.outlineBtn} onPress={() => router.push('/cancel-rental')}>
+        <Pressable style={styles.outlineBtn} onPress={() => router.push(`/cancel-rental?bookingId=${booking.id}`)}>
           <Text style={styles.outlineText}>Cancel</Text>
         </Pressable>
         <PrimaryButton
@@ -224,4 +231,7 @@ const styles = StyleSheet.create({
   outlineBtn: { flex: 1, height: 58, borderRadius: 999, backgroundColor: colors.surfaceGray, alignItems: 'center', justifyContent: 'center' },
   outlineText: { fontFamily: fontFamily.semibold, fontSize: 17, color: colors.primary },
   flexBtn: { flex: 1 },
+  empty: { alignItems: 'center', justifyContent: 'center', gap: 10, paddingTop: 120 },
+  emptyTitle: { fontFamily: fontFamily.bold, fontSize: 19, color: colors.text },
+  emptyText: { fontFamily: fontFamily.regular, fontSize: 15, color: colors.textSecondary, textAlign: 'center' },
 });

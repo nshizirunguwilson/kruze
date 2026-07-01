@@ -66,7 +66,7 @@ export default function YourProfile() {
               onChangeText={setPhone}
               keyboardType="phone-pad"
             />
-            <Pressable hitSlop={8}>
+            <Pressable hitSlop={8} onPress={() => router.push('/verify')}>
               <Text style={styles.change}>Change</Text>
             </Pressable>
           </View>

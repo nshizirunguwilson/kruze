@@ -10,7 +10,8 @@ import { CarCard } from '@/components/cars/CarCard';
 import { Chip } from '@/components/ui/Chip';
 import { CircleBackButton } from '@/components/ui/CircleBackButton';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { Car, favoriteCars, formatPrice } from '@/data/cars';
+import { CARS, Car, formatPrice } from '@/data/cars';
+import { useFavorites } from '@/state/favorites';
 import { colors, fontFamily } from '@/theme';
 
 const FILTERS = ['All', 'Sedan', 'SUV', 'MPV', 'Hatchback'];
@@ -19,13 +20,13 @@ export default function Favorite() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [filter, setFilter] = useState('All');
-  const [removed, setRemoved] = useState<string[]>([]);
   const [pending, setPending] = useState<Car | null>(null);
+  const { ids, remove } = useFavorites();
 
   const cars = useMemo(() => {
-    const list = favoriteCars.filter((c) => !removed.includes(c.id));
+    const list = CARS.filter((c) => ids.has(c.id));
     return filter === 'All' ? list : list.filter((c) => c.type === filter);
-  }, [filter, removed]);
+  }, [filter, ids]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
@@ -35,9 +36,9 @@ export default function Favorite() {
         <Text style={styles.title} pointerEvents="none">
           Favorite
         </Text>
-        <View style={styles.searchBtn}>
+        <Pressable style={styles.searchBtn} onPress={() => router.push('/search')}>
           <Ionicons name="search" size={20} color={colors.text} />
-        </View>
+        </Pressable>
       </View>
 
       <ScrollView
@@ -69,7 +70,7 @@ export default function Favorite() {
         car={pending}
         onCancel={() => setPending(null)}
         onConfirm={() => {
-          if (pending) setRemoved((r) => [...r, pending.id]);
+          if (pending) remove(pending.id);
           setPending(null);
         }}
       />
