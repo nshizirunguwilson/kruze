@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { CarFrontIcon } from '@/components/icons/CarFrontIcon';
+import { KruzeLogo } from '@/components/icons/KruzeLogo';
 import { colors, fontFamily } from '@/theme';
 
 export default function SplashScreenView() {
@@ -18,10 +18,8 @@ export default function SplashScreenView() {
     <View style={styles.container}>
       <StatusBar style="light" />
       <View style={styles.logoBlock}>
-        <View style={styles.iconCircle}>
-          <CarFrontIcon size={46} color={colors.primary} cutout={colors.white} />
-        </View>
-        <Text style={styles.title}>Car Rental</Text>
+        <KruzeLogo size={96} tileColor={colors.white} markColor={colors.primary} />
+        <Text style={styles.title}>Kruze</Text>
       </View>
     </View>
   );
@@ -36,14 +34,6 @@ const styles = StyleSheet.create({
   },
   logoBlock: {
     alignItems: 'center',
-  },
-  iconCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   title: {
     marginTop: 22,

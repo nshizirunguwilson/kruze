@@ -79,7 +79,7 @@ export default function Welcome() {
       {/* Copy + CTAs */}
       <View style={styles.body}>
         <Text style={styles.headline}>
-          Your Ultimate <Text style={styles.headlineAccent}>Car Rental</Text>
+          Your Ultimate <Text style={styles.headlineAccent}>Kruze</Text>
           {'\n'}Experience
         </Text>
         <Text style={styles.subtitle}>
